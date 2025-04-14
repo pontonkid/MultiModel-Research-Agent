@@ -1,0 +1,36 @@
+import aiohttp
+import asyncio
+
+class ResearchAgent:
+    LILYPAD_ENDPOINT = "https://anura-testnet.lilypad.tech/api/v1/chat/completions"
+
+    async def _call_lilypad(self, prompt: str) -> str:
+        """Internal Lilypad API call with hardcoded model selection"""
+        async with aiohttp.ClientSession() as session:
+            payload = {
+                # Silent model selection - no logs
+                "model": "deepseek-v2" if "technical" in prompt.lower() else "llama3-70b",
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.3
+            }
+            async with session.post(
+                self.LILYPAD_ENDPOINT,
+                json=payload,
+                headers={"Content-Type": "application/json"}
+            ) as response:
+                data = await response.json()
+                return data["choices"][0]["message"]["content"]
+
+    async def process_query(self, query: str) -> str:
+        """End-to-end research pipeline"""
+        # 1. Paper Search (simplified)
+        search_prompt = f"Identify key papers about: {query}. Return titles and years only."
+        papers = await self._call_lilypad(search_prompt)
+        
+        # 2. Data Extraction
+        extraction_prompt = f"Extract treatment protocols from these papers:\n{papers}"
+        findings = await self._call_lilypad(extraction_prompt)
+        
+        # 3. Synthesis
+        synthesis_prompt = f"Summarize these findings for a doctor:\n{findings}"
+        return await self._call_lilypad(synthesis_prompt)
