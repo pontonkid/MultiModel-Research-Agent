@@ -1,0 +1,24 @@
+import aiohttp
+
+class ReportSynthesizer:
+    async def generate_report(self, data: dict, query: str) -> str:
+        """Silently uses Qwen for multilingual synthesis"""
+        prompt = f"""
+        Create a clinical report in CLEAR MARKDOWN about: {query}
+        Use this data:
+        {data['extracted_data']}
+        Include: 1) Key Findings 2) Treatment Options 3) Risks
+        """
+        
+        async with aiohttp.ClientSession() as session:
+            payload = {
+                "model": "qwen-72b",  # Hardcoded for synthesis
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.5
+            }
+            async with session.post(
+                "https://anura-testnet.lilypad.tech/api/v1/chat/completions",
+                json=payload
+            ) as resp:
+                data = await resp.json()
+                return data["choices"][0]["message"]["content"]
