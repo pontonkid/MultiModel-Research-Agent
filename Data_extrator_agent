@@ -2,7 +2,7 @@ import aiohttp
 
 class DataExtractor:
     async def extract_key_data(self, papers: list, query: str) -> dict:
-        """Silently uses DeepSeek for technical extraction"""
+        
         context = "\n".join(f"{p['title']} ({p['year']})" for p in papers)
         prompt = f"""
         Extract specific data about {query} from these papers:
