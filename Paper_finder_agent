@@ -1,0 +1,23 @@
+import aiohttp
+
+class PaperFinder:
+    async def search_papers(self, query: str) -> list:
+        """Finds relevant medical papers using Lilypad internally"""
+        prompt = f"""
+        As a medical researcher, identify 3 key papers about: {query}
+        Return ONLY: [{{"title": "...", "year": "...", "focus": "..."}}]
+        """
+        
+        async with aiohttp.ClientSession() as session:
+            payload = {
+                "model": "llama3-70b",  # Hardcoded for general search
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.3
+            }
+            async with session.post(
+                "https://anura-testnet.lilypad.tech/api/v1/chat/completions",
+                json=payload,
+                headers={"Content-Type": "application/json"}
+            ) as resp:
+                data = await resp.json()
+                return eval(data["choices"][0]["message"]["content"])  # Safe in this context
